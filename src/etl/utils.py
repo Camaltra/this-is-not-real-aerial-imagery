@@ -39,11 +39,10 @@ class RecorderConfig:
     screenshot_width: int
     screenshot_height: int
     batch_save_size: int
-    model_config: ModelConfig | None = None
     delete_intermediate_saves: bool = True
 
     def __str__(self):
-        return f"Recoder CONFIG:\n\tNum Of Batch To Collect: {self.num_of_batch_to_collect}\n\tOffset: {self.offset}\n\tScreenshot Width: {self.screenshot_width}\n\tScreenshot Height: {self.screenshot_height}\n\tBatch Save Size: {self.batch_save_size}\n\tNodel Use: {self.model_config.model_version if self.model_config is not None else None}\n\tDelete Intermediate Saves: {self.delete_intermediate_saves}"
+        return f"Recoder CONFIG:\n\tNum Of Batch To Collect: {self.num_of_batch_to_collect}\n\tOffset: {self.offset}\n\tScreenshot Width: {self.screenshot_width}\n\tScreenshot Height: {self.screenshot_height}\n\tBatch Save Size: {self.batch_save_size}\n\tDelete Intermediate Saves: {self.delete_intermediate_saves}"
 
 
 def parser(

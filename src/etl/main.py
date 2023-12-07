@@ -10,6 +10,9 @@ from exception import (
 import os
 import re
 import logging
+from recorder import EarthRecorder
+from dataclasses import asdict
+import time
 
 LOCAL_MODEL_REGISTRY_PATH = Path().absolute() / "model" / "registry"
 
@@ -117,7 +120,6 @@ def build_configs(
         screenshot_width=command_line_args.screenshot_width,
         screenshot_height=command_line_args.screenshot_height,
         batch_save_size=command_line_args.batch_size,
-        model_config=model_config,
         delete_intermediate_saves=command_line_args.delete_intermediate_saves,
     )
 
@@ -130,14 +132,13 @@ def build_configs(
     parse_arguments,
 )
 def main(command_line_args: Namespace) -> None:
-    a = {}
-    with open("model/registry/classifier_metadata:01.json", "w") as f:
-        json.dump(a, f)
     recorder_config, model_config = build_configs(command_line_args)
     logging.info(recorder_config)
-    if model_config:
-        logging.info(model_config)
-        # classifier =
+    # if model_config:
+    #     logging.info(model_config)
+    recorder = EarthRecorder(**asdict(recorder_config))
+    time.sleep(3)
+    recorder.record()
 
 
 if __name__ == "__main__":

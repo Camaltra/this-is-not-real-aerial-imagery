@@ -30,5 +30,6 @@ class RegistryDoesNotExist(Exception):
 class ModelArchitectureUnvailable(Exception):
     def __init__(self, query_model_name: str):
         super().__init__(
-            "Query model <%s> does not part in the available mapping, please consult /src/etl/model/mapping.py", query_model_name
+            "Query model <%s> does not part in the available mapping, please consult /src/etl/model/mapping.py",
+            query_model_name,
         )
