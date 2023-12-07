@@ -43,7 +43,72 @@ class ShallowClassifier(nn.Module):
         return self.model(x)
 
 
+class LeNet(nn.Module):
+    """
+    Not suppose to take as input big images
+    """
+    def __init__(self):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=6, kernel_size=5, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Flatten(),
+            nn.Linear(in_features=250000, out_features=120),
+            nn.ReLU(),
+            nn.Linear(in_features=120, out_features=84),
+            nn.ReLU(),
+            nn.Linear(in_features=84, out_features=1)
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+class AlexNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        pass
+
+
+class VGG16(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        pass
+
+
+class VGG19(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        pass
+
+
+class Inception3(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        pass
+
+
+class ResNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        pass
+
+
 if __name__ == "__main__":
     x = torch.rand(size=(1, 3, 512, 512))
     model = ShallowClassifier()
-    print(model(x))
+    print(model(x).shape)
