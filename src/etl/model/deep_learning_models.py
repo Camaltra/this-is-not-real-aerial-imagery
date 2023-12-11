@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import albumentations as A  # type: ignore
 from albumentations.pytorch import ToTensorV2  # type: ignore
-from torchsummary import summary
 from torchvision import models
 from torchvision.models.vgg import VGG16_Weights, VGG19_Weights
+import cv2
 
 
 def get_shallow_transforms() -> tuple[A.Compose, A.Compose]:
@@ -177,7 +177,7 @@ transform = A.Compose([])
 def get_vgg_transforms() -> tuple[A.Compose, A.Compose]:
     train_transforms = A.Compose(
         [
-            A.Resize(256, 256, interpolation=A.InterpolationMode.BILINEAR),
+            A.Resize(256, 256, interpolation=cv2.INTER_LINEAR),
             A.CenterCrop(224, 224),
             A.Rotate(limit=35, p=1.0),
             A.HorizontalFlip(p=0.5),
@@ -193,11 +193,11 @@ def get_vgg_transforms() -> tuple[A.Compose, A.Compose]:
 
     valid_transforms = A.Compose(
         [
-            A.Resize(256, 256, interpolation=A.InterpolationMode.BILINEAR),
+            A.Resize(256, 256, interpolation=cv2.INTER_LINEAR),
             A.CenterCrop(224, 224),
             A.Normalize(
                 mean=[0.485, 0.456, 0.406],
-                std = [0.229, 0.224, 0.225],
+                std=[0.229, 0.224, 0.225],
                 max_pixel_value=255,
             ),
             ToTensorV2(),

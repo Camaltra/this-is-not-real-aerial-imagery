@@ -78,11 +78,11 @@ class ExperiementTracker:
             self._save_model_and_detailled_metrics(detailled_metrics, trainer.model)
             self.logger.info("End training experiment, see data in the registry")
         except Exception as e:
-            logging.error(
+            self.logger.error(
                 "Unkown error happen during the fit of the config:\n%s",
                 trainer.training_paramters,
             )
-            logging.debug(e)
+            self.logger.debug(e)
         if detailled_metrics is not None:
             self.tracking.last_tag_processed = detailled_metrics.model_tag
             if detailled_metrics.model_accuracy > (

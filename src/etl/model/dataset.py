@@ -7,15 +7,18 @@ from PIL import Image
 import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from pathlib import Path
 import os
 
 
 class EarthPicDataset(Dataset):
-    def __init__(self, transform: None | A.Compose = None) -> None:
+    def __init__(self, datatype: str, transform: None | A.Compose = None) -> None:
+        assert datatype in [
+            "train",
+            "valid",
+        ], "Wrong argument passed to EarthPicDataset"
         current_folder_path = os.path.dirname(os.path.abspath(__file__))
-        earth = glob(f"{current_folder_path}/data/earth/*.png")
-        ocean = glob(f"{current_folder_path}/data/ocean/*.png")
+        earth = glob(f"{current_folder_path}/data/{datatype}/earth/*.png")
+        ocean = glob(f"{current_folder_path}/data/{datatype}/ocean/*.png")
         self.fpaths = earth + ocean
 
         self.transform: A.Compose | None = transform or A.Compose(
