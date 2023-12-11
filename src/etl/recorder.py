@@ -40,15 +40,15 @@ class EarthRecorder:
         self.filepath_processed: list[Path] = []
         self.total_processed_sample: int = 0
 
-        self.monitor_manager: MonitorManager = MonitorManager()
+        self.monitor_manager = MonitorManager()
 
     def _get_neighbour_coords(self, current_coord: Coordinates):
         x, y = current_coord.x, current_coord.y
         return [
             Coordinates(x, y + self.offset),
-            Coordinates(x, y - self.offset),
             Coordinates(x + self.offset, y),
             Coordinates(x - self.offset, y),
+            Coordinates(x, y - self.offset),
         ]
 
     def _update_neighbour_and_processed_coords(self, current_coord: Coordinates):
@@ -58,8 +58,8 @@ class EarthRecorder:
                 self.non_visited_coords.put(neighbour_coord)
                 self.processed.add(neighbour_coord)
 
-    def _process_predictions(self, x: np.ndarray) -> np.ndarray:
-        pass
+    def _process_predictions(self, x: np.ndarray) -> None:
+        return None
 
     def _clean_collected_data(self):
         datas = []

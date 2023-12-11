@@ -40,13 +40,13 @@ class MonitorManager:
 
         return primary_monitor.width * 2, primary_monitor.height * 2
 
-    def _capture_screen(self) -> Image:
+    def _capture_screen(self) -> Image.Image:
         self.logger.debug("Screen capture performed")
         return pyautogui.screenshot().convert("RGB")
 
     def catpure_partial_screen_from_middle(
         self, width: int, height: int, output_format: ImageType
-    ) -> Image:
+    ) -> Image.Image | np.ndarray:
         left = (self.monitor_width - width) / 2
         top = (self.monitor_height - height) / 2
         right = (self.monitor_width + width) / 2
@@ -55,7 +55,7 @@ class MonitorManager:
         screen_capture = self._capture_screen()
         cropped_screen_capture = screen_capture.crop((left, top, right, bottom))
         if output_format == ImageType.NUMPY:
-            cropped_screen_capture = np.array(cropped_screen_capture)
+            return np.array(cropped_screen_capture)
 
         return cropped_screen_capture
 

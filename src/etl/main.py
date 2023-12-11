@@ -99,7 +99,7 @@ def build_configs(
             if model_path is None:
                 raise UnfoundClassifier
 
-        model_version = tag or re.search(r":([0-9]{2})", model_path).group()
+        model_version = tag or re.search(r":([0-9]{2})", model_path).group()  # type: ignore
         with open(
             LOCAL_MODEL_REGISTRY_PATH / f"classifier_metadata{model_version}.json", "r"
         ) as f:

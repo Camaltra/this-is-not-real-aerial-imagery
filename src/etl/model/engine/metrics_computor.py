@@ -9,7 +9,7 @@ class BCMetrics:
         model: torch.nn.Module,
         device: str = "mps",
     ) -> float:
-        accuracy = 0
+        accuracy = 0.0
         model.eval()
         with torch.no_grad():
             for x, y in loader:
@@ -20,7 +20,7 @@ class BCMetrics:
                 accuracy += (preds == y).sum() / x.shape[0]
         model.train()
         accuracy /= len(loader)
-        return accuracy.item()
+        return accuracy.item()  # type: ignore
 
     @staticmethod
     def compute_loss(
@@ -29,7 +29,7 @@ class BCMetrics:
         loss_fn: torch.nn.Module,
         device: str = "mps",
     ) -> float:
-        total_loss = 0
+        total_loss = 0.0
 
         model.eval()
         with torch.no_grad():
