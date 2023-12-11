@@ -52,7 +52,7 @@ class Trainer(ABC):
         self.batch_size = self.__training_parameters.batch_size
         self.num_epoch = self.__training_parameters.num_epoch
 
-        self.loss_fn = None
+        self.loss_fn: None | nn.Module = None
         self.optimizer = self.__training_parameters.optim.build_optimizer(
             self.model.parameters()
         )
