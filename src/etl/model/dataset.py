@@ -12,7 +12,10 @@ import os
 
 class EarthPicDataset(Dataset):
     def __init__(self, datatype: str, transform: None | A.Compose = None) -> None:
-        assert datatype in ["train", "valid"], "Wrong argument passed to EarthPicDataset"
+        assert datatype in [
+            "train",
+            "valid",
+        ], "Wrong argument passed to EarthPicDataset"
         current_folder_path = os.path.dirname(os.path.abspath(__file__))
         earth = glob(f"{current_folder_path}/data/{datatype}/earth/*.png")
         ocean = glob(f"{current_folder_path}/data/{datatype}/ocean/*.png")

@@ -33,3 +33,9 @@ class ModelArchitectureUnvailable(Exception):
             "Query model <%s> does not part in the available mapping, please consult /src/etl/model/mapping.py",
             query_model_name,
         )
+
+class MissingConfigParameters(Exception):
+    def __init__(self, parameter_name: str):
+        super().__init__(
+            "Missing parameter in the config file <%s>, please refer to the template to see what is required", parameter_name
+        )

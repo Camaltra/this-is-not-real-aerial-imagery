@@ -34,7 +34,7 @@ def parse_arguments(parser: ArgumentParser) -> ArgumentParser:
         help="The model identifiant architecture -- see /src/etl/model/mapping.py",
         type=str,
         required=True,
-        choices=list(MODEL_NAME_TO_MODEL_INFOS.keys())
+        choices=list(MODEL_NAME_TO_MODEL_INFOS.keys()),
     )
     parser.add_argument(
         "--experiement-id",
@@ -47,7 +47,7 @@ def parse_arguments(parser: ArgumentParser) -> ArgumentParser:
         help="The otpimizer name -- see available /src/etl/model/data_classes.py",
         type=str,
         choices=["adam", "rmsprop", "sgd"],
-        required=True
+        required=True,
     )
     parser.add_argument(
         "--adam-beta-1",
