@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import albumentations as A  # type: ignore
 from albumentations.pytorch import ToTensorV2  # type: ignore
-from torchsummary import summary
 from torchvision import models
 from torchvision.models.vgg import VGG16_Weights, VGG19_Weights
 

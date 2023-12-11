@@ -55,7 +55,7 @@ class MonitorManager:
         screen_capture = self._capture_screen()
         cropped_screen_capture = screen_capture.crop((left, top, right, bottom))
         if output_format == ImageType.NUMPY:
-            return np.array(cropped_screen_capture)
+            return np.array(cropped_screen_capture, dtype=np.uint8)
 
         return cropped_screen_capture
 

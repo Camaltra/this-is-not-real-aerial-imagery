@@ -107,7 +107,7 @@ class EarthRecorder:
                     self.screenshot_width,
                     self.screenshot_height,
                     3,
-                )
+                ), dtype=np.uint8,
             )
             for img_idx in range(self.batch_save_size):
                 self._update_neighbour_and_processed_coords(current_coords)

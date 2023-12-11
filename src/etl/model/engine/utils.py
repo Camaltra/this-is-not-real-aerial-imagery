@@ -13,8 +13,8 @@ class Verbose(Enum):
 def get_loaders(
     train_transform: A.Compose, valid_transform: A.Compose, batch_size: int
 ) -> tuple[DataLoader, DataLoader]:
-    trn_ds = EarthPicDataset(train_transform)
-    val_ds = EarthPicDataset(valid_transform)
+    trn_ds = EarthPicDataset("train", train_transform)
+    val_ds = EarthPicDataset("valid", valid_transform)
     return DataLoader(
         trn_ds, batch_size=batch_size, shuffle=True, drop_last=True
     ), DataLoader(val_ds, batch_size=batch_size, shuffle=False, drop_last=True)
