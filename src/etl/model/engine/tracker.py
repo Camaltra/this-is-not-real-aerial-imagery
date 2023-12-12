@@ -101,11 +101,11 @@ class ExperiementTracker:
     ) -> None:
         filepath = self.TRACKING_PATH / self.experiment_id
         detailled_metrics_filename = (
-            f"classfier_metadata:{detailled_metrics.model_tag}.json"
+            f"classifier_metadata:{detailled_metrics.model_tag}.json"
         )
         with open(filepath / detailled_metrics_filename, "w") as f:
             json.dump(asdict(detailled_metrics), f, indent=2)
-        torch.save(model, filepath / f"classfier:{detailled_metrics.model_tag}.pt")
+        torch.save(model, filepath / f"classifier:{detailled_metrics.model_tag}.pt")
         self.logger.info("Model and experiements history saved...")
 
     def _build_detailled_metrics(

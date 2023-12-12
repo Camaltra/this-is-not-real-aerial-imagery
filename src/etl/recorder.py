@@ -7,7 +7,7 @@ import queue
 import logging
 from utils import Coordinates, ImageType
 from monitor_manager import MonitorManager
-from etl.model.utils import Classifier
+from etl.model.classifier import Classifier
 import time
 from pathlib import Path
 
@@ -20,7 +20,7 @@ class EarthRecorder:
         screenshot_width: int = 512,
         screenshot_height: int = 512,
         batch_save_size: int = 64,
-        classfier: Classifier | None = None,
+        classifier: Classifier | None = None,
         delete_intermediate_saves: bool = True,
     ):
         self.num_of_batch_to_collect = num_of_batch_to_collect
@@ -29,7 +29,7 @@ class EarthRecorder:
         self.screenshot_height = screenshot_height
         self.batch_save_size = batch_save_size
         self.delete_intermediate_saves = delete_intermediate_saves
-        self.classifier = classfier
+        self.classifier = classifier
 
         self.logger = logging.getLogger("EarthRecorder")
 
@@ -58,10 +58,13 @@ class EarthRecorder:
                 self.non_visited_coords.put(neighbour_coord)
                 self.processed.add(neighbour_coord)
 
-    def _process_predictions(self, x: np.ndarray) -> None:
-        return None
+    def _process_predictions(
+        self, images: np.ndarray, predictions: np.ndarray
+    ) -> np.ndarray:
+        mask = predictions > 0.5
+        return images[mask]
 
-    def _clean_collected_data(self):
+    def _clean_collected_data(self) -> None:
         datas = []
 
         for filepath in self.filepath_processed:
@@ -82,6 +85,9 @@ class EarthRecorder:
                         filepath,
                     )
 
+        if len(datas) == 0:
+            return None
+
         concatenated_datas = np.concatenate(datas, axis=0)
 
         output_filepath = (
@@ -97,7 +103,7 @@ class EarthRecorder:
             "/".join(str(output_filepath).split("/")[-5:]),
         )
 
-    def record(self):
+    def record(self) -> None:
         current_coords = self.initial_coords
         for i in range(1, self.num_of_batch_to_collect + 1):
             self.logger.info("Batch <%s> started", i)
@@ -107,7 +113,8 @@ class EarthRecorder:
                     self.screenshot_width,
                     self.screenshot_height,
                     3,
-                ), dtype=np.uint8,
+                ),
+                dtype=np.uint8,
             )
             for img_idx in range(self.batch_save_size):
                 self._update_neighbour_and_processed_coords(current_coords)
@@ -124,8 +131,8 @@ class EarthRecorder:
                 self.monitor_manager.move(current_coords, next_coords)
                 current_coords = next_coords
             if self.classifier is not None:
-                self.classifier.predict(images)
-                self._process_predictions(images)
+                predictions = self.classifier.predict(images)
+                images = self._process_predictions(images, predictions)
 
             batch_save_filepath = (
                 Path().absolute()
@@ -133,16 +140,22 @@ class EarthRecorder:
                 / f"{time.strftime('%Y-%m-%d-%H-%M-%S')}_batch_{i}.npy"
             )
 
-            np.save(batch_save_filepath, images)
+            if images.shape[0] != 0:
+                np.save(batch_save_filepath, images)
+                self.logger.info(
+                    "Batch <%s> finished, keep %s/%s pictures, save it to %s",
+                    i,
+                    images.shape[0],
+                    self.batch_save_size,
+                    "/".join(str(batch_save_filepath).split("/")[-5:]),
+                )
+                self.filepath_processed.append(batch_save_filepath)
+            else:
+                self.logger.info(
+                    "Batch <%s> finished, No image keep after model prediction, no saved file been created",
+                    i,
+                )
 
-            self.logger.info(
-                "Batch <%s> finished, keep %s/%s pictures, save it to %s",
-                i,
-                images.shape[0],
-                self.batch_save_size,
-                "/".join(str(batch_save_filepath).split("/")[-5:]),
-            )
-            self.filepath_processed.append(batch_save_filepath)
             self.total_processed_sample += images.shape[0]
 
         self._clean_collected_data()
