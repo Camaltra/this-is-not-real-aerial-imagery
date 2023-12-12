@@ -1,11 +1,15 @@
 import json
 from argparse import ArgumentParser, Namespace
+
+import torch
+
 from utils import parser, ModelConfig, RecorderConfig
 from pathlib import Path
 from exception import (
     ExpectedClassfierVersionDoesNotExist,
+    ExperiementRequired,
     UnfoundClassifier,
-    RegistryDoesNotExist,
+    BatchSizeCantBeZeroOrNegatif,
 )
 import os
 import re
@@ -13,6 +17,8 @@ import logging
 from recorder import EarthRecorder
 from dataclasses import asdict
 import time
+from etl.model.classifier import Classifier
+import numpy as np
 
 LOCAL_MODEL_REGISTRY_PATH = Path().absolute() / "model" / "registry"
 
@@ -53,7 +59,12 @@ def parse_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         "--classifier-model-tag",
         help="The tag of the classifier to use | Take the lastest by default if exist",
-        type=int,
+        type=str,
+    )
+    parser.add_argument(
+        "--experiment-name",
+        help="The experiement name for the model selection",
+        type=str,
     )
     parser.add_argument(
         "--use-classifier",
@@ -70,49 +81,63 @@ def parse_arguments(parser: ArgumentParser) -> ArgumentParser:
     return parser
 
 
-def get_latest_file_with_regex(directory, pattern):
-    matching_files = [file for file in os.listdir(directory) if re.match(pattern, file)]
-    if matching_files:
-        latest_file = max(
-            matching_files, key=lambda f: os.path.getctime(os.path.join(directory, f))
-        )
-        return os.path.join(directory, latest_file)
+def get_experiement_from_tag(
+    experiments: list[dict], tag: str
+) -> dict[str, str | float] | None:
+    for experiment in experiments:
+        if experiment.get("model_tag") == tag:
+            return experiment
+    return None
+
+
+def build_classifier_config(command_line_args: Namespace) -> ModelConfig:
+    if command_line_args.experiment_name is None:
+        raise ExperiementRequired
+    registry_path = LOCAL_MODEL_REGISTRY_PATH / command_line_args.experiment_name
+    with open(registry_path / "registry_logs.json", "r") as f:
+        registry_logs = json.load(f)
+    if command_line_args.classifier_model_tag is not None:
+        tag = command_line_args.classifier_model_tag
+        experiments = registry_logs.get("experiments")
+        experiment = get_experiement_from_tag(experiments, tag)
+        if experiment is None:
+            raise ExpectedClassfierVersionDoesNotExist(tag)
     else:
-        return None
+        tag = registry_logs.get("best_model_tag")
+        if tag is None:
+            raise ExpectedClassfierVersionDoesNotExist(tag)
+
+    print(registry_path / f"classifier:{tag}.pt")
+    if not (registry_path / f"classifier:{tag}.pt").is_file():
+        raise UnfoundClassifier
+    with open(registry_path / f"classifier_metadata:{tag}.json", "r") as f:
+        detailed_model_train_summary = json.load(f)
+
+    model_config = ModelConfig(
+        model_name=detailed_model_train_summary.get("experiment_parameters").get(
+            "model_name"
+        ),
+        model_path=str(registry_path / f"classifier:{tag}.pt"),
+        model_version=detailed_model_train_summary.get("model_tag"),
+        accuracy=detailed_model_train_summary.get(
+            "model_accuracy", "Accuracy data unvailable"
+        ),
+    )
+
+    return model_config
 
 
 def build_configs(
     command_line_args: Namespace,
 ) -> tuple[RecorderConfig, ModelConfig | None]:
+    classifier = None
     model_config = None
     if command_line_args.use_classifier:
-        if not LOCAL_MODEL_REGISTRY_PATH.is_dir():
-            raise RegistryDoesNotExist
-        if tag := command_line_args.classifier_model_tag is not None:
-            if not (LOCAL_MODEL_REGISTRY_PATH / f"classifier{tag}.pt").is_file():
-                raise ExpectedClassfierVersionDoesNotExist
-            model_path = (LOCAL_MODEL_REGISTRY_PATH / f"classifier{tag}.pt").is_file()
-        else:
-            model_path = get_latest_file_with_regex(
-                LOCAL_MODEL_REGISTRY_PATH, r".*:([0-9]{2}).pt"
-            )
-            if model_path is None:
-                raise UnfoundClassifier
+        model_config = build_classifier_config(command_line_args)
+        classifier = Classifier(model_config.model_name, model_config.model_path)
 
-        model_version = tag or re.search(r":([0-9]{2})", model_path).group()  # type: ignore
-        with open(
-            LOCAL_MODEL_REGISTRY_PATH / f"classifier_metadata{model_version}.json", "r"
-        ) as f:
-            model_performance = json.load(f)
-
-        model_config = ModelConfig(
-            model_path=model_path,
-            model_version=model_version,
-            accuracy=model_performance.get("accuracy", "Accuracy data unvailable"),
-            train_date=model_performance.get(
-                "train_date", "Train date data unvailable"
-            ),
-        )
+    if command_line_args.batch_size <= 0:
+        raise BatchSizeCantBeZeroOrNegatif
 
     recorder_config = RecorderConfig(
         num_of_batch_to_collect=command_line_args.number_batch,
@@ -120,6 +145,7 @@ def build_configs(
         screenshot_width=command_line_args.screenshot_width,
         screenshot_height=command_line_args.screenshot_height,
         batch_save_size=command_line_args.batch_size,
+        classifier=classifier,
         delete_intermediate_saves=command_line_args.delete_intermediate_saves,
     )
 
@@ -134,8 +160,9 @@ def build_configs(
 def main(command_line_args: Namespace) -> None:
     recorder_config, model_config = build_configs(command_line_args)
     logging.info(recorder_config)
-    # if model_config:
-    #     logging.info(model_config)
+    if model_config:
+        logging.info(model_config)
+
     recorder = EarthRecorder(**asdict(recorder_config))
     time.sleep(3)
     recorder.record()

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from argparse import ArgumentParser
 from typing import Callable
+from etl.model.classifier import Classifier
 
 
 class ImageType(Enum):
@@ -23,13 +24,13 @@ class Coordinates:
 
 @dataclass()
 class ModelConfig:
+    model_name: str
     model_path: str
     model_version: str
     accuracy: float | str
-    train_date: str
 
     def __str__(self):
-        return f"Model CONFIG\n\tModel Version: {self.model_version}\n\tModel Accuracy: {f'{self.accuracy}:.2f %' if isinstance(self.accuracy, float) else self.accuracy}\n\tTrain Date: {self.train_date}"
+        return f"Model CONFIG\n\tModel Name: {self.model_name}\n\tModel Path: {self.model_path}\n\tModel Version: {self.model_version}\n\tModel Accuracy: {f'{self.accuracy:.2f} %' if isinstance(self.accuracy, float) else self.accuracy}"
 
 
 @dataclass()
@@ -39,6 +40,7 @@ class RecorderConfig:
     screenshot_width: int
     screenshot_height: int
     batch_save_size: int
+    classifier: Classifier | None
     delete_intermediate_saves: bool = True
 
     def __str__(self):
