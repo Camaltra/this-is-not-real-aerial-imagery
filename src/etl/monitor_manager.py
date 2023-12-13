@@ -6,7 +6,8 @@ from screeninfo.common import Monitor
 import logging
 from PIL import Image
 from exception import UndetectedMonitor, UndetectedPrimaryMonitor
-from utils import ImageType, Coordinates
+from utils import ImageType
+from recorder_strategies import Coordinates
 
 
 logging.basicConfig(level=logging.INFO)
