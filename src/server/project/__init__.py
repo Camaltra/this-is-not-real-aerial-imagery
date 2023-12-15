@@ -1,6 +1,5 @@
-from flask import Flask, jsonify, g
+from flask import Flask, g
 from sqlalchemy.orm import sessionmaker
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from project.config import Config
 from project.models.user import User
@@ -31,23 +30,11 @@ def hello_world():
     return user.email
 
 
-#
-#
-# from flask import Flask, request, jsonify, session
-# from flask_bcrypt import Bcrypt
-# from flask_cors import CORS
-# from config import ApplicationConfig
-# from server.data import Session
-# from server.data import User
-#
-# app = Flask(__name__)
-# app.config.from_object(ApplicationConfig)
-# app.secret_key = ApplicationConfig.SECRET_KEY
-#
-# bcrypt = Bcrypt(app)
-# CORS(app, supports_credentials=True)
-#
-#
+
+##############################################
+### First Draft of Server Side Session Auth ##
+##############################################
+
 # @app.route("/@me")
 # def get_current_user():
 #     user_id = session.get("user_id")
@@ -117,34 +104,3 @@ def hello_world():
 #     session.pop("user_id")
 #     return "200"
 #
-#
-# @app.route("/delete_quizz", methods=["POST"])
-# def create_quizz():
-#     # request.json("date") or request.json("id")
-#     # Delete a quizz
-#     # Move pics from quizz folder to own folder
-#     # Delete quizz
-#     return True
-#
-#
-# @app.route("/delete_quizz", methods=["POST"])
-# def delete_quizz():
-#     # Delete a quizz
-#     return True
-#
-# @app.route("/disable_quizz", methods=["POST"])
-# def disable_quizz():
-#     # Disable a quizz
-#     return True
-#
-# # Commit
-# # Return Quizz ID
-#
-#
-# @app.route("/")
-# def home():
-#     return ApplicationConfig.SQLALCHEMY_DATABASE_URI
-#
-#
-# if __name__ == "__main__":
-#     app.run(debug=True)
