@@ -165,3 +165,5 @@ logs/
 *.json
 *.pt
  .mypy_cache/
+ .env.prod
+ .env.prod.db
