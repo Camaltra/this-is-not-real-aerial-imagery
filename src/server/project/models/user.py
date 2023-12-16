@@ -1,22 +1,17 @@
 from sqlalchemy import (
     Column,
-    Integer,
     String,
-    Text,
-    DateTime,
-    ForeignKey,
-    Float,
     Boolean,
 )
-from project.models import Base
+from project.models import Base, BaseMixin
+from dataclasses import dataclass
 
 
-class User(Base):
+@dataclass()
+class User(Base, BaseMixin):
     __tablename__ = "users"
 
-    id: int = Column(Integer, primary_key=True)
-    email: str = Column(String(128), unique=True, nullable=False)
+    username: str = Column(String(30), nullable=False)
+    email: str = Column(String(254), unique=True, nullable=False)
+    password: str = Column(String(60), nullable=False)
     active: bool = Column(Boolean(), default=True, nullable=False)
-
-    def __init__(self, email):
-        self.email = email
