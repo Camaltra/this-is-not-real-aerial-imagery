@@ -3,6 +3,8 @@ from flask import session as redis_session
 from flask import jsonify, request, g
 from project.models.user import User
 from project.extension import bcrypt
+from project.routes.auth.utils import compute_pasword
+
 
 @auth_bp.route("/")
 def auth_healthy():
@@ -20,17 +22,16 @@ def register_user():
     if user_exists:
         return jsonify({"error": "User already exists"}), 409
 
-    hashed_password = bcrypt.generate_password_hash(password)
-    new_user = User(username=username, email=email, password=hashed_password.decode('utf8'))
+    hashed_password = compute_pasword(password)
+    new_user = User(username=username, email=email, password=hashed_password)
     g.session.add(new_user)
     g.session.commit()
 
     redis_session["user_id"] = new_user.id
 
-    return jsonify({
-        "id": new_user.id,
-        "email": new_user.email
-    })
+    return jsonify(
+        {"id": new_user.id, "username": new_user.username, "email": new_user.email}
+    )
 
 
 @auth_bp.route("/login", methods=["POST"])
@@ -48,10 +49,7 @@ def login_user():
 
     redis_session["user_id"] = user.id
 
-    return jsonify({
-        "id": user.id,
-        "email": user.email
-    })
+    return jsonify({"id": user.id, "email": user.email})
 
 
 @auth_bp.route("/logout", methods=["POST"])
