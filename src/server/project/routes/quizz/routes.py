@@ -4,6 +4,7 @@ from flask import g, session
 from project.routes.quizz import quizz_bp
 from flask import abort, jsonify, request, send_file
 from sqlalchemy import or_
+from sqlalchemy.sql.expression import true
 from project.models import PictureQuestion, Quizz, UserQuizzHistory
 from project.routes.user.utils import is_admin
 from project.connectors.s3 import S3Manager
@@ -32,7 +33,7 @@ def get_available_quizz_title():
 def get_quizz_picture(quizz_id: int, question_ix: int):
     quizz: Quizz | None = (
         g.session.query(Quizz)
-        .filter(Quizz.available == True, Quizz.id == quizz_id)
+        .filter(Quizz.available == true(), Quizz.id == quizz_id)
         .first()
     )
     if quizz is None:
