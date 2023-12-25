@@ -1,8 +1,9 @@
 from flask.cli import FlaskGroup
 
 from project import app, engine, Session
-from project.models import Base
+from project.models.base import Base
 from project.models.user import User
+from project.routes.auth.utils import compute_password
 
 cli = FlaskGroup(app)
 
@@ -14,11 +15,16 @@ def create_db():
         Base.metadata.create_all(engine)
 
 
-@cli.command("seed_db")
-def seed_db():
+@cli.command("create_admin")
+def create_admin():
     with app.app_context():
         session = Session()
-        user = User(email="michael@mherman.org")
+        user = User(
+            email="admin@admin.com",
+            password=compute_password("admin"),
+            username="Admin",
+            admin=True,
+        )
         session.add(user)
         session.commit()
 

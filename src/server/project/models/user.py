@@ -1,22 +1,21 @@
 from sqlalchemy import (
     Column,
-    Integer,
     String,
-    Text,
-    DateTime,
-    ForeignKey,
-    Float,
     Boolean,
 )
-from project.models import Base
+from project.models.base import Base, BaseMixin
+from dataclasses import dataclass
+from sqlalchemy.orm import relationship
 
 
-class User(Base):
-    __tablename__ = "users"
+@dataclass()
+class User(Base, BaseMixin):
+    __tablename__ = "user"
 
-    id: int = Column(Integer, primary_key=True)
-    email: str = Column(String(128), unique=True, nullable=False)
+    username: str = Column(String(30), nullable=True, unique=True)
+    email: str = Column(String(254), unique=True, nullable=False)
+    password: str = Column(String(60), nullable=False)
     active: bool = Column(Boolean(), default=True, nullable=False)
+    admin: bool = Column(Boolean(), default=False, nullable=False)
 
-    def __init__(self, email):
-        self.email = email
+    quizz_history = relationship("UserQuizzHistory", back_populates="user", cascade="all, delete-orphan")
