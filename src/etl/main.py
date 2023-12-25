@@ -1,9 +1,7 @@
 import json
 from argparse import ArgumentParser, Namespace
 
-import torch
-
-from utils import parser, ModelConfig, RecorderConfig
+from etl.utils import parser, ModelConfig, RecorderConfig
 from pathlib import Path
 from exception import (
     ExpectedClassfierVersionDoesNotExist,
@@ -11,14 +9,11 @@ from exception import (
     UnfoundClassifier,
     BatchSizeCantBeZeroOrNegatif,
 )
-import os
-import re
 import logging
 from recorder import EarthRecorder
 from dataclasses import asdict
 import time
 from etl.model.classifier import Classifier
-import numpy as np
 
 LOCAL_MODEL_REGISTRY_PATH = Path().absolute() / "model" / "registry"
 
@@ -146,6 +141,7 @@ def build_configs(
         screenshot_height=command_line_args.screenshot_height,
         batch_save_size=command_line_args.batch_size,
         classifier=classifier,
+        recorder_stategy=None,
         delete_intermediate_saves=command_line_args.delete_intermediate_saves,
     )
 

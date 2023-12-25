@@ -3,23 +3,13 @@ from enum import Enum
 from argparse import ArgumentParser
 from typing import Callable
 from etl.model.classifier import Classifier
+from etl.recorder_strategies import RecorderStrategy
 
 
 class ImageType(Enum):
     NUMPY = "np.array"
     PIL = "pillow"
 
-
-@dataclass(frozen=True)
-class Coordinates:
-    x: int
-    y: int
-
-    def __sub__(self, other: "Coordinates") -> tuple[int, int]:
-        return self.x - other.x, self.y - other.y
-
-    def __str__(self):
-        print("Coordinates (x<%s>, y<%s>)", self.x, self.y)
 
 
 @dataclass()
@@ -41,6 +31,7 @@ class RecorderConfig:
     screenshot_height: int
     batch_save_size: int
     classifier: Classifier | None
+    recorder_stategy: RecorderStrategy | None
     delete_intermediate_saves: bool = True
 
     def __str__(self):

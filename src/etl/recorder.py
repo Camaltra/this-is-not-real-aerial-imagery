@@ -2,14 +2,13 @@ import os
 
 import numpy as np
 
-import queue
-
 import logging
-from utils import Coordinates, ImageType
+from etl.utils import ImageType
 from monitor_manager import MonitorManager
 from etl.model.classifier import Classifier
 import time
 from pathlib import Path
+from recorder_strategies import RecorderStrategy, DFSStrategy, SnailStrategy
 
 
 class EarthRecorder:
@@ -21,6 +20,7 @@ class EarthRecorder:
         screenshot_height: int = 512,
         batch_save_size: int = 64,
         classifier: Classifier | None = None,
+        recorder_stategy: RecorderStrategy | None = None,
         delete_intermediate_saves: bool = True,
     ):
         self.num_of_batch_to_collect = num_of_batch_to_collect
@@ -31,32 +31,14 @@ class EarthRecorder:
         self.delete_intermediate_saves = delete_intermediate_saves
         self.classifier = classifier
 
+        self.recorder_stategy: RecorderStrategy = recorder_stategy or SnailStrategy(offset)
+
         self.logger = logging.getLogger("EarthRecorder")
 
-        self.non_visited_coords: queue.Queue[Coordinates] = queue.Queue()
-        self.initial_coords: Coordinates = Coordinates(0, 0)
-        self.processed: set[Coordinates] = set()
-        self.processed.add(self.initial_coords)
         self.filepath_processed: list[Path] = []
         self.total_processed_sample: int = 0
 
         self.monitor_manager = MonitorManager()
-
-    def _get_neighbour_coords(self, current_coord: Coordinates):
-        x, y = current_coord.x, current_coord.y
-        return [
-            Coordinates(x, y + self.offset),
-            Coordinates(x + self.offset, y),
-            Coordinates(x - self.offset, y),
-            Coordinates(x, y - self.offset),
-        ]
-
-    def _update_neighbour_and_processed_coords(self, current_coord: Coordinates):
-        neighbour_coords = self._get_neighbour_coords(current_coord)
-        for neighbour_coord in neighbour_coords:
-            if neighbour_coord not in self.processed:
-                self.non_visited_coords.put(neighbour_coord)
-                self.processed.add(neighbour_coord)
 
     def _process_predictions(
         self, images: np.ndarray, predictions: np.ndarray
@@ -104,7 +86,7 @@ class EarthRecorder:
         )
 
     def record(self) -> None:
-        current_coords = self.initial_coords
+        current_coords = self.recorder_stategy.initial_coords
         for i in range(1, self.num_of_batch_to_collect + 1):
             self.logger.info("Batch <%s> started", i)
             images = np.empty(
@@ -117,7 +99,6 @@ class EarthRecorder:
                 dtype=np.uint8,
             )
             for img_idx in range(self.batch_save_size):
-                self._update_neighbour_and_processed_coords(current_coords)
                 images[
                     img_idx, :, :, :
                 ] = self.monitor_manager.catpure_partial_screen_from_middle(
@@ -126,7 +107,7 @@ class EarthRecorder:
                     output_format=ImageType.NUMPY,
                 )
 
-                next_coords = self.non_visited_coords.get()
+                next_coords = self.recorder_stategy.get_next_coords(current_coords)
 
                 self.monitor_manager.move(current_coords, next_coords)
                 current_coords = next_coords

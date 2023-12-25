@@ -1,0 +1,16 @@
+name: torch_bis
+channels:
+  - anaconda
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - torchaudio
+  - torchvision
+  - pytorch::pytorch
+  - conda=23.11.0
+  - albumentations
+  - tqdm
+  - screeninfo
+  - matplotlib
