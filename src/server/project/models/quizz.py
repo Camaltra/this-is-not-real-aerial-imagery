@@ -20,11 +20,11 @@ class Quizz(Base, BaseMixin):
     picture_questions: list["PictureQuestion"] = relationship(
         "PictureQuestion", back_populates="quizz", cascade="all, delete-orphan"
     )
-    user_history = relationship("UserQuizzHistory", back_populates="quizz")
+    user_history = relationship("UserQuizzHistory", back_populates="quizz", cascade="all, delete-orphan")
 
     @property
     def number_of_pictures(self):
-        return len(self.pictures)
+        return len(self.picture_questions)
 
 
 @dataclass()

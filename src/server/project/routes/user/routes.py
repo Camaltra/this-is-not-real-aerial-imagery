@@ -59,6 +59,7 @@ def get_user_id(user_id: str):
                 "type": "User",
                 "id": user.id,
                 "username": user.username,
+                # To see if email is really needed in the response
                 "email": user.email,
             },
         }
@@ -73,7 +74,6 @@ def get_all_users():
         {
             "id": user.id,
             "username": user.username,
-            "email": user.email,
         }
         for user in users
     ]
@@ -128,6 +128,9 @@ def delete_user(user_id: str):
         abort(401, "Unauthorized")
 
     user_to_delete = g.session.query(User).filter(User.id == user_id).first()
+
+    if user_to_delete.admin:
+        abort(403, "Cannot delete admin user")
 
     if not user_to_delete:
         abort(404, "User not found")

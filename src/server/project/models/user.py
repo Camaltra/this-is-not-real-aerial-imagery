@@ -18,4 +18,4 @@ class User(Base, BaseMixin):
     active: bool = Column(Boolean(), default=True, nullable=False)
     admin: bool = Column(Boolean(), default=False, nullable=False)
 
-    quizz_history = relationship("UserQuizzHistory", back_populates="user")
+    quizz_history = relationship("UserQuizzHistory", back_populates="user", cascade="all, delete-orphan")

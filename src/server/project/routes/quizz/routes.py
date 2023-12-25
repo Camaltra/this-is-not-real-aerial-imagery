@@ -34,6 +34,7 @@ def quizz_healthy():
 
 @quizz_bp.route("/")
 def get_available_quizz_title():
+    # TODO: Re-write the query to return quizz with user history (if any) (with score and completion date)
     available_quizzs = g.session.query(Quizz).filter(Quizz.available == true()).all()
     quizzs = [{"id": quizz.id, "name": quizz.quizz_name} for quizz in available_quizzs]
     return jsonify(quizzs=quizzs)
@@ -55,7 +56,7 @@ def get_quizz_picture(quizz_id: int, question_ix: int):
         .first()
     )
     if quizz is None:
-        abort(404, f"Quiz with id {quizz_id} not found")
+        abort(404, f"Quizz with id {quizz_id} not found")
 
     if question_ix >= len(quizz.picture_questions):
         abort(404, f"Question {question_ix} not found in quiz with id {quizz_id}")
@@ -89,6 +90,7 @@ def create_quizz():
     try:
         images, targets = build_quizz_content(manager, number_of_pics)
     except InsufficientImagesError as e:
+        logger.error(f"Failed to create quiz. InsufficientImagesError: {e}")
         return jsonify({"error": str(e)}), 400
 
     if quizz_name is None:
@@ -143,7 +145,7 @@ def compute_scores_and_save():
     if quizz is None:
         abort(404, "Quizz not found")
 
-    if len(user_answers) != len(quizz.picture_questions):
+    if len(user_answers) != quizz.number_of_pictures:
         abort(404, "Answer length doesn't match quizz length")
 
     if len(user_answers) == 0:

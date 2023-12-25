@@ -13,7 +13,7 @@ class QuizzCreateRequest(BaseModel):
 
 class ComputeScoresAndSaveParams(BaseModel):
     user_id: int
-    user_answers: list[str]
+    user_answers: list[int]
     quizz_id: int
 
 
