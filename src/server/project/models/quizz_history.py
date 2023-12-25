@@ -10,6 +10,7 @@ class UserQuizzHistory(Base, BaseMixin):
 
     user_id: int = Column(Integer, ForeignKey("user.id"), nullable=False)
     quizz_id: int = Column(Integer, ForeignKey("quizz.id"), nullable=False)
-    score: float = Column(Float, nullable=False)
+    last_score: float = Column(Float, nullable=False)
+    best_score: float = Column(Float, nullable=False)
     user = relationship("User", back_populates="quizz_history")
     quizz = relationship("Quizz", back_populates="user_history")

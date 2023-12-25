@@ -1,0 +1,2 @@
+class InsufficientImagesError(Exception):
+    pass

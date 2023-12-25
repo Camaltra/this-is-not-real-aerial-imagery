@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship
 class User(Base, BaseMixin):
     __tablename__ = "user"
 
-    username: str = Column(String(30), nullable=False)
+    username: str = Column(String(30), nullable=True, unique=True)
     email: str = Column(String(254), unique=True, nullable=False)
     password: str = Column(String(60), nullable=False)
     active: bool = Column(Boolean(), default=True, nullable=False)

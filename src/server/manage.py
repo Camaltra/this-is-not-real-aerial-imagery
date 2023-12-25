@@ -3,7 +3,7 @@ from flask.cli import FlaskGroup
 from project import app, engine, Session
 from project.models.base import Base
 from project.models.user import User
-from project.routes.auth.utils import compute_pasword
+from project.routes.auth.utils import compute_password
 
 cli = FlaskGroup(app)
 
@@ -21,7 +21,7 @@ def create_admin():
         session = Session()
         user = User(
             email="admin@admin.com",
-            password=compute_pasword("admin"),
+            password=compute_password("admin"),
             username="Admin",
             admin=True,
         )

@@ -12,6 +12,16 @@ from project.routes.quizz.constant import BUCKET_NAME
 import time
 from project.routes.quizz.utils import QuizzFileManager, build_quizz_content
 import logging
+from project.routes.quizz.schemas import (
+    QuizzPictureRequest,
+    QuizzCreateRequest,
+    ComputeScoresAndSaveParams,
+    DeleteQuizzParams,
+)
+from pydantic import ValidationError
+from sqlalchemy import exc
+from project.routes.quizz.exceptions import InsufficientImagesError
+
 
 logger = logging.getLogger("QuizzEndPoint")
 logger.setLevel(logging.WARNING)
@@ -24,23 +34,31 @@ def quizz_healthy():
 
 @quizz_bp.route("/")
 def get_available_quizz_title():
-    available_quizzs = g.session.query(Quizz).filter(Quizz.available == True).all()
+    available_quizzs = g.session.query(Quizz).filter(Quizz.available == true()).all()
     quizzs = [{"id": quizz.id, "name": quizz.quizz_name} for quizz in available_quizzs]
     return jsonify(quizzs=quizzs)
 
 
 @quizz_bp.route("/<quizz_id>/<question_ix>")
 def get_quizz_picture(quizz_id: int, question_ix: int):
+    try:
+        request_data = QuizzPictureRequest(quizz_id=quizz_id, question_ix=question_ix)
+    except ValidationError as e:
+        return jsonify({"error": "Invalid input data", "details": str(e.errors())}), 400
+
+    quizz_id = request_data.quizz_id
+    question_ix = request_data.question_ix
+
     quizz: Quizz | None = (
         g.session.query(Quizz)
         .filter(Quizz.available == true(), Quizz.id == quizz_id)
         .first()
     )
     if quizz is None:
-        abort(404, "quizz not found")
+        abort(404, f"Quiz with id {quizz_id} not found")
 
     if question_ix >= len(quizz.picture_questions):
-        abort(404, "question not found")
+        abort(404, f"Question {question_ix} not found in quiz with id {quizz_id}")
 
     manager = S3Manager(BUCKET_NAME)
     image = quizz.picture_questions[question_ix]
@@ -53,20 +71,28 @@ def get_quizz_picture(quizz_id: int, question_ix: int):
     )
 
 
-@quizz_bp.route("/", methods=["POST"])
+@quizz_bp.route("/create_quizz", methods=["POST"])
 def create_quizz():
     if not is_admin(session.get("user_id")):
         abort(401, "Unauthorized")
 
+    try:
+        request_data = QuizzCreateRequest(**request.json)
+    except ValidationError as e:
+        return jsonify({"error": "Invalid input data", "details": str(e.errors())}), 400
+
     manager = QuizzFileManager()
 
-    number_of_pics = request.json.get("number_of_pics", 5)
+    quizz_name = request_data.quizz_name
+    number_of_pics = request_data.number_of_pics
 
-    images, targets = build_quizz_content(manager, number_of_pics)
+    try:
+        images, targets = build_quizz_content(manager, number_of_pics)
+    except InsufficientImagesError as e:
+        return jsonify({"error": str(e)}), 400
 
-    quizz_name = request.json.get("quizz_name")
     if quizz_name is None:
-        abort(400, "Missing quizz_name parameter")
+        return jsonify({"error": "Missing quizz_name parameter"}), 400
 
     folder_name = f"{time.strftime('%Y-%m-%d-%H-%M-%S')}_{quizz_name}"
 
@@ -83,83 +109,103 @@ def create_quizz():
     try:
         g.session.add(created_quizz)
         g.session.commit()
-    except Exception as e:
+    except exc.SQLAlchemyError as e:
         g.session.rollback()
-        logger.warning(f"SQLAlchemyException: {e}")
-        return jsonify({"error": "Error while created the quizz"})
+        logger.error(f"Failed to create quiz. SQLAlchemyError: {e}")
+        return jsonify({"error": "Error while creating the quiz"}), 500
 
     manager.build_quizz_folder(created_quizz)
     return jsonify(
         {
-            "success": "created",
+            "success": True,
             "object": {
                 "type": "Quizz",
                 "quizz_id": created_quizz.id,
                 "quizz_name": created_quizz.quizz_name,
+                "folder_name": created_quizz.folder_name,
             },
         }
     )
 
 
-@quizz_bp.route("/compute_score", methods=["POST"])
-def compute_score():
-    user_awnser = request.json.get("user_awnser")
-    quizz_id = request.json.get("quizz_id")
-    question_ix = request.json.get("question_ix")
-    if user_awnser is None or quizz_id is None or question_ix is None:
-        abort(400, "missing parameter, please send user_awnser, quizz_id, question_ix")
-
-    quizz: Quizz | None = g.session.query(Quizz).filter(Quizz.id == quizz_id).first()
-    if quizz is None:
-        abort(404, "quizz not found")
-
-    if question_ix >= len(quizz.picture_questions):
-        abort(404, "picture not found")
-
-    question = quizz.picture_questions[question_ix]
-    return jsonify({"response": user_awnser == question.awnser})
-
-
 @quizz_bp.route("/score_save", methods=["POST"])
 def compute_scores_and_save():
-    user_awnsers = request.json.get("user_awnsers")
-    quizz_id = request.json.get("quizz_id")
-    user_id = session.get("user_id")
+    try:
+        request_data = ComputeScoresAndSaveParams(**request.json)
+    except ValidationError as e:
+        return jsonify({"error": "Invalid input data", "details": str(e.errors())}), 400
 
-    if user_awnsers is None or quizz_id is None:
-        abort(400, "missing parameter, please send user_awnsers and quizz_id")
+    user_id = request_data.user_id
+    quizz_id = request_data.quizz_id
+    user_answers = request_data.user_answers
 
     quizz: Quizz | None = g.session.query(Quizz).filter(Quizz.id == quizz_id).first()
     if quizz is None:
-        abort(404, "quizz not found")
+        abort(404, "Quizz not found")
 
-    if len(user_awnsers) != len(quizz.picture_questions):
-        abort(404, "awnser len doesn't match quizz len")
-    score = 0
-    for ix, user_awnser in enumerate(user_awnsers):
-        if user_awnser == quizz.picture_questions[ix].awnser:
-            score += 1
-    score /= len(user_awnsers)
+    if len(user_answers) != len(quizz.picture_questions):
+        abort(404, "Answer length doesn't match quizz length")
 
-    score = UserQuizzHistory(user_id=user_id, quizz_id=quizz_id, score=score)
+    if len(user_answers) == 0:
+        abort(400, "User answers are empty. Cannot calculate score")
+
+    score = sum(
+        user_answer == question.awnser
+        for user_answer, question in zip(user_answers, quizz.picture_questions)
+    ) / len(user_answers)
+
+    score_history: UserQuizzHistory | None = (
+        g.session.query(UserQuizzHistory)
+        .filter_by(user_id=user_id, quizz_id=quizz_id)
+        .first()
+    )
+
+    if score_history:
+        if score > score_history.best_score:
+            score_history.best_score = score
+        score_history.last_score = score
+    else:
+        score_history = UserQuizzHistory(
+            user_id=user_id, quizz_id=quizz_id, best_score=score, last_score=score
+        )
+        g.session.add(score_history)
+
     try:
-        g.session.add(score)
         g.session.commit()
     except Exception as e:
         g.session.rollback()
         logger.warning(f"SQLAlchemyException: {e}")
-        return jsonify({"error": "Error while trying to save the score"})
+        return jsonify({"error": "Error while trying to save the score"}), 500
 
-    return jsonify({"success": "score computed and saved", "score": score})
+    return (
+        jsonify(
+            {
+                "success": True,
+                "object": {
+                    "type": "QuizzHistory",
+                    "quizz_history_id": score_history.id,
+                    "quizz_name": quizz.quizz_name,
+                    "last_score": score_history.last_score,
+                    "best_score": score_history.best_score,
+                    "user_id": user_id,
+                },
+                "computed_score": score,
+            }
+        ),
+        200,
+    )
 
 
 @quizz_bp.route("/", methods=["DELETE"])
 def delete_quizz():
-    manager = QuizzFileManager()
-    quizz_name = request.json.get("quizz_name")
-    quizz_id = request.json.get("quizz_id")
-    if quizz_name is None and quizz_id is None:
-        abort(400, "Please give one of the following parameter: quizz_name | quizz_id")
+    try:
+        request_params = DeleteQuizzParams(**request.json)
+    except ValidationError as e:
+        return jsonify({"error": "Invalid input data", "details": str(e.errors())}), 400
+
+    quizz_name = request_params.quizz_name
+    quizz_id = request_params.quizz_id
+
     quizz_to_delete: Quizz | None = (
         g.session.query(Quizz)
         .filter(or_(Quizz.quizz_name == quizz_name, Quizz.id == quizz_id))
@@ -167,21 +213,26 @@ def delete_quizz():
     )
     if quizz_to_delete:
         try:
+            manager = QuizzFileManager()
             g.session.delete(quizz_to_delete)
             g.session.commit()
+            manager.delete_quizz_folder(quizz_to_delete)
+            return (
+                jsonify(
+                    {
+                        "success": True,
+                        "object": {
+                            "type": "Quizz",
+                            "quizz_id": quizz_to_delete.id,
+                            "quizz_name": quizz_to_delete.quizz_name,
+                        },
+                    }
+                ),
+                204,
+            )
         except Exception as e:
             g.session.rollback()
-            logger.warning(f"SQLAlchemyException: {e}")
-            return jsonify({"error": "error while deleting the folder"})
-        manager.delete_quizz_folder(quizz_to_delete)
-        return jsonify(
-            {
-                "success": "deleted",
-                "object": {
-                    "type": "Quizz",
-                    "quizz_id": quizz_to_delete.id,
-                    "quizz_name": quizz_to_delete.quizz_name,
-                },
-            }
-        )
-    return jsonify({"no operation": "quizz not found"})
+            logger.warning(f"Error deleting quizz: {e}")
+            return (jsonify({"error": "Error while deleting the quizz"}),)
+
+    return jsonify({"error": "Quizz not found"}), 404

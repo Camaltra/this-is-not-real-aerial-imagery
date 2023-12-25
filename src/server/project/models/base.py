@@ -1,4 +1,3 @@
-from sqlalchemy.orm import declarative_base
 from dataclasses import dataclass
 from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime

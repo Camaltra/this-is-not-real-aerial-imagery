@@ -1,3 +1,5 @@
 BUCKET_NAME = "quizzimages"
 REAL_IMAGE_FOLDER = "real_images"
 DEEPFAKE_IMAGE_FOLDER = "deepfake_images"
+REAL_IMAGES_COUNT = 1
+MAX_REAL_IMAGES = 4
