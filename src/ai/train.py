@@ -1,4 +1,3 @@
-from ai.models.u_net import UNet
 import torch
 from ai.diffusion_process import DiffusionModel
 from ai.trainer import Trainer
@@ -6,6 +5,7 @@ from ai.utils import parser
 from argparse import ArgumentParser, Namespace
 import os
 import json
+from ai.mapping import MODEL_NAME_MAPPING
 
 
 def parse_arguments(parser: ArgumentParser) -> ArgumentParser:
@@ -51,7 +51,9 @@ def main(command_line_args: Namespace) -> None:
     trainer_config = config_file.get("trainer_config")
     diffusion_config = config_file.get("diffusion_config")
 
-    model = UNet(
+    unet_ = MODEL_NAME_MAPPING.get(unet_config.get("model_mapping"))
+
+    model = unet_(
         dim=unet_config.get("input"),
         channels=unet_config.get("channels"),
         dim_mults=tuple(unet_config.get("dim_mults")),
@@ -64,6 +66,7 @@ def main(command_line_args: Namespace) -> None:
         timesteps=diffusion_config.get("timesteps"),
     )
     trainer = Trainer(
+        # TODO: Add the path to save and load the model from
         diffusion_model,
         "../data/training",
         train_batch_size=trainer_config.get("train_batch_size"),

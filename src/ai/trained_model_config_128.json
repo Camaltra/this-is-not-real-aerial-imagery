@@ -8,6 +8,7 @@
     "num_samples": 4
   },
   "unet_config": {
+    "model_mapping": "OneResUNet",
     "input": 64,
     "batch_size": 16,
     "dim_mults": [1, 2, 4, 8],
