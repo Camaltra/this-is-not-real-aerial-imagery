@@ -102,7 +102,6 @@ def build_classifier_config(command_line_args: Namespace) -> ModelConfig:
         if tag is None:
             raise ExpectedClassfierVersionDoesNotExist(tag)
 
-    print(registry_path / f"classifier:{tag}.pt")
     if not (registry_path / f"classifier:{tag}.pt").is_file():
         raise UnfoundClassifier
     with open(registry_path / f"classifier_metadata:{tag}.json", "r") as f:
