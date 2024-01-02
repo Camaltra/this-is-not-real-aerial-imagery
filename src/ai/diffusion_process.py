@@ -27,7 +27,7 @@ class DiffusionModel(nn.Module):
         model: nn.Module,
         image_size: int,
         *,
-        beta_schedule: str = "linear",
+        beta_scheduler: str = "linear",
         timesteps: int = 1000,
         schedule_fn_kwargs: dict | None = None,
         auto_normalize: bool = True,
@@ -38,14 +38,14 @@ class DiffusionModel(nn.Module):
         self.channels = self.model.channels
         self.image_size = image_size
 
-        self.beta_schedule_fn = self.SCHEDULER_MAPPING.get(beta_schedule)
-        if self.beta_schedule_fn is None:
-            raise ValueError(f"unknown beta schedule {beta_schedule}")
+        self.beta_scheduler_fn = self.SCHEDULER_MAPPING.get(beta_scheduler)
+        if self.beta_scheduler_fn is None:
+            raise ValueError(f"unknown beta schedule {beta_scheduler}")
 
         if schedule_fn_kwargs is None:
             schedule_fn_kwargs = {}
 
-        betas = self.beta_schedule_fn(timesteps, **schedule_fn_kwargs)
+        betas = self.beta_scheduler_fn(timesteps, **schedule_fn_kwargs)
         alphas = 1.0 - betas
         alphas_cumprod = torch.cumprod(alphas, dim=0)
         alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.0)

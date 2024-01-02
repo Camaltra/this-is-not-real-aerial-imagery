@@ -100,10 +100,6 @@ class UNet(nn.Module):
         channels=3,
         sinusoidal_pos_emb_theta=10000,
         convnext_block_groups=8,
-        attn_dim_head=32,
-        attn_heads=4,
-        full_attn=None,  # defaults to full attention only for inner most layer
-        flash_attn=False,
     ):
         super().__init__()
         self.channels = channels
