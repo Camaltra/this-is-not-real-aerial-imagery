@@ -1,4 +1,3 @@
-from ai.models.u_net import UNet
 import torch
 from ai.diffusion_process import DiffusionModel
 from ai.trainer import Trainer
@@ -8,6 +7,7 @@ import os
 import json
 import time
 from torchvision import utils
+from ai.mapping import MODEL_NAME_MAPPING
 
 
 def parse_arguments(parser: ArgumentParser) -> ArgumentParser:
@@ -60,8 +60,10 @@ def main(command_line_args: Namespace) -> None:
     trainer_config = config_file.get("trainer_config")
     diffusion_config = config_file.get("diffusion_config")
 
-    model = UNet(
-        unet_config.get("input"),
+    unet_ = MODEL_NAME_MAPPING.get(unet_config.get("model_mapping"))
+
+    model = unet_(
+        dim=unet_config.get("input"),
         channels=unet_config.get("channels"),
         dim_mults=tuple(unet_config.get("dim_mults")),
     ).to("mps")
@@ -72,9 +74,11 @@ def main(command_line_args: Namespace) -> None:
         beta_scheduler=diffusion_config.get("betas_scheduler"),
         timesteps=diffusion_config.get("timesteps"),
     )
+
     trainer = Trainer(
-        diffusion_model,
-        "../data/training",
+        diffusion_model=diffusion_model,
+        folder="../data/training",
+        results_folder=f'./results/{config_file.get("model_name")}',
         train_batch_size=trainer_config.get("train_batch_size"),
         train_lr=trainer_config.get("train_lr"),
         train_num_steps=trainer_config.get("train_num_steps"),
@@ -82,7 +86,9 @@ def main(command_line_args: Namespace) -> None:
         num_samples=trainer_config.get("num_samples"),
     )
 
-    trainer.load(command_line_args.model_milestone, is_old_model=command_line_args.is_old_model)
+    trainer.load(
+        command_line_args.model_milestone, is_old_model=command_line_args.is_old_model
+    )
     samples = trainer.model.sample(batch_size=command_line_args.num_samples)
 
     for ix, sample in enumerate(samples):

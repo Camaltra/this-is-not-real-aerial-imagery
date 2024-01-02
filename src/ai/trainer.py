@@ -129,10 +129,7 @@ class Trainer:
                     for ix, sampled_img in enumerate(sampled_imgs):
                         utils.save_image(
                             sampled_img,
-                            str(
-                                self.results_folder
-                                / f"sample-{milestone}-{ix}.png"
-                            ),
+                            str(self.results_folder / f"sample-{milestone}-{ix}.png"),
                         )
 
                     self.save(milestone)
