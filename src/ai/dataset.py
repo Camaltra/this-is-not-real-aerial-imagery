@@ -7,10 +7,10 @@ from glob import glob
 class AerialDataset(Dataset):
     def __init__(
         self,
-        folder,
-        image_size,
-        augment_horizontal_flip=False,
-    ):
+        folder: str,
+        image_size: int,
+        augment_horizontal_flip: bool = False,
+    ) -> None:
         self.paths = [path for path in glob(f"{folder}/*.png")]
         self.image_size = image_size
 
@@ -23,10 +23,10 @@ class AerialDataset(Dataset):
             ]
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.paths)
 
-    def __getitem__(self, ix):
+    def __getitem__(self, ix) -> torch.Tensor:
         path = self.paths[ix]
         img = Image.open(path).convert("RGB")
         return self.transform(img)

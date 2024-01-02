@@ -7,27 +7,27 @@ from torch.optim import AdamW
 from pathlib import Path
 from ai.utils import cycle
 from ai.dataset import AerialDataset
+from ai.diffusion_process import DiffusionModel
 
 
 class Trainer:
     def __init__(
         self,
-        diffusion_model,
-        folder,
+        diffusion_model: DiffusionModel,
+        folder: str,
         *,
-        train_batch_size=16,
-        gradient_accumulate_every=1,
-        augment_horizontal_flip=True,
-        train_lr=1e-4,
-        train_num_steps=100000,
-        ema_update_every=10,
-        ema_decay=0.995,
-        adam_betas=(0.9, 0.99),
-        save_and_sample_every=1000,
-        num_samples=4,
-        results_folder="./results",
-        save_best_and_latest_only=False,
-    ):
+        train_batch_size: int = 16,
+        augment_horizontal_flip: bool = True,
+        train_lr: float = 1e-4,
+        train_num_steps: int = 100000,
+        ema_update_every: int = 10,
+        ema_decay: float = 0.995,
+        adam_betas: tuple[float, float] = (0.9, 0.99),
+        save_and_sample_every: int = 1000,
+        num_samples: int = 4,
+        results_folder: str = "./results",
+        save_best_and_latest_only: bool = False,
+    ) -> None:
         self.model = diffusion_model
         self.channels = diffusion_model.channels
 
@@ -37,7 +37,6 @@ class Trainer:
         self.save_and_sample_every = save_and_sample_every
 
         self.batch_size = train_batch_size
-        self.gradient_accumulate_every = gradient_accumulate_every
 
         self.train_num_steps = train_num_steps
         self.image_size = diffusion_model.image_size
@@ -60,10 +59,10 @@ class Trainer:
         self.save_best_and_latest_only = save_best_and_latest_only
 
     @property
-    def device(self):
+    def device(self) -> str:
         return "mps"
 
-    def save(self, milestone):
+    def save(self, milestone: int) -> None:
         data = {
             "step": self.step,
             "model": self.model.model.state_dict(),
@@ -74,7 +73,7 @@ class Trainer:
 
         torch.save(data, str(self.results_folder / f"model-{milestone}-final.pt"))
 
-    def load(self, milestone, is_old_model: bool = False):
+    def load(self, milestone: int, is_old_model: bool = False) -> None:
         data = torch.load(
             str(self.results_folder / f"model-{milestone}-final.pt"),
             map_location=self.device,
@@ -99,7 +98,7 @@ class Trainer:
         if "version" in data:
             print(f"loading from version {data['version']}")
 
-    def train(self):
+    def train(self) -> None:
         with tqdm(initial=self.step, total=self.train_num_steps) as pbar:
             while self.step < self.train_num_steps:
                 total_loss = 0.0
