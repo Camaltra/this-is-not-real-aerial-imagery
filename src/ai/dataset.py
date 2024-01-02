@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms as T
 from PIL import Image
 from glob import glob
+import torch
 
 
 class AerialDataset(Dataset):
