@@ -15,6 +15,7 @@ class Trainer:
         self,
         diffusion_model: DiffusionModel,
         folder: str,
+        results_folder: str,
         *,
         train_batch_size: int = 16,
         augment_horizontal_flip: bool = True,
@@ -25,7 +26,6 @@ class Trainer:
         adam_betas: tuple[float, float] = (0.9, 0.99),
         save_and_sample_every: int = 1000,
         num_samples: int = 4,
-        results_folder: str = "./results",
         save_best_and_latest_only: bool = False,
     ) -> None:
         self.model = diffusion_model
@@ -71,11 +71,11 @@ class Trainer:
             "version": "1.0",
         }
 
-        torch.save(data, str(self.results_folder / f"model-{milestone}-final.pt"))
+        torch.save(data, str(self.results_folder / f"model-{milestone}.pt"))
 
     def load(self, milestone: int, is_old_model: bool = False) -> None:
         data = torch.load(
-            str(self.results_folder / f"model-{milestone}-final.pt"),
+            str(self.results_folder / f"model-{milestone}.pt"),
             map_location=self.device,
         )
 
@@ -131,7 +131,7 @@ class Trainer:
                             sampled_img,
                             str(
                                 self.results_folder
-                                / f"sample-{milestone}-{ix}-final.png"
+                                / f"sample-{milestone}-{ix}.png"
                             ),
                         )
 

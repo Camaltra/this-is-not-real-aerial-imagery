@@ -1,5 +1,5 @@
 {
-  "model_name": "final",
+  "model_name": "oneres_128_1",
   "trainer_config": {
     "train_batch_size": 16,
     "train_lr": 1e-4,

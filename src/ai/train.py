@@ -65,10 +65,11 @@ def main(command_line_args: Namespace) -> None:
         beta_scheduler=diffusion_config.get("betas_scheduler"),
         timesteps=diffusion_config.get("timesteps"),
     )
+
     trainer = Trainer(
-        # TODO: Add the path to save and load the model from
-        diffusion_model,
-        "../data/training",
+        diffusion_model=diffusion_model,
+        folder="../data/training",
+        results_folder=f'./results/{config_file.get("model_name")}',
         train_batch_size=trainer_config.get("train_batch_size"),
         train_lr=trainer_config.get("train_lr"),
         train_num_steps=trainer_config.get("train_num_steps"),
