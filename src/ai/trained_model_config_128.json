@@ -1,5 +1,5 @@
 {
-  "model_name": "final",
+  "model_name": "oneres_128_1",
   "trainer_config": {
     "train_batch_size": 16,
     "train_lr": 1e-4,
@@ -8,6 +8,7 @@
     "num_samples": 4
   },
   "unet_config": {
+    "model_mapping": "OneResUNet",
     "input": 64,
     "batch_size": 16,
     "dim_mults": [1, 2, 4, 8],
