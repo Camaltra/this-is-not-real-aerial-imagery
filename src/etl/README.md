@@ -4,13 +4,9 @@
 
 1. [Overview](#overview)
    - [Working](#working)
+   - [Installation](#installation)
    
 2. [How to Use](#how-to-use)
-   - [Required Steps](#required-steps)
-   - [Parameters](#parameters)
-   - [Running the Script](#running-the-script)
-
-3. [Data Storage](#data-storage)
 
 ## Overview
 
@@ -28,6 +24,9 @@ The script outlined below performs the following actions from an open Google Ear
 
 This approach allows for the systematic gathering of data from various edges.
 
+### Installation
+Please install the envirement conda present in the `environment.yaml` file
+
 ## How to Use
 
 1. Open your web browser, navigate to Google Earth, and manually select your starting point.
@@ -41,6 +40,7 @@ This approach allows for the systematic gathering of data from various edges.
    - `--use-classifier`: Whether to use a classifier (refer to the model README for Classifier Earth vs Ocean)
    - `--classifier-model-tag`: Tag of the classifier to use (see model README)
    - `--delete-intermediate-saves`: Delete intermediate saves
+   - `--experiment-name`: The experiement name
 
    Note: The only required parameter is the number of batches; all other parameters have default values. Refer to the script's `parse_arg` function for details.
 
@@ -49,6 +49,13 @@ This approach allows for the systematic gathering of data from various edges.
    ```bash
    python main.py <parameters>
    ```
+   
+   Example
+
+   ```bash
+   python main.py --number-batch 100 --batch-size 128 --use-classifier --classifier-model-tag 09 --experiement-name vgg16pretrained
+   ```
+
 
 The data will be stored in:
 

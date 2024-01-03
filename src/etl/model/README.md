@@ -37,16 +37,41 @@ The tracker is built to monitor experiments using a JSON database. All model tra
 
 ### Experiments Logs Output
 
-The tracker outputs experiment logs into a folder named `./registry`, containing all experiments classified by ID.
+The tracker outputs experiment logs into a folder named `./registry/experiement-id`, containing all experiments classified by ID.
 
 ### Available Models
 
 Find all available models for experiments tracking in the `deep_learning_models.py` file. The current available model is:
 
 - Shallow Convnet
+- LeNet
+- AlexNet
+- VGG16
+- PretrainedVGG16
+- PretrainedVGG19
 
 Additional models will be added over time. Note that this folder might eventually become its own repository to serve as a module. If this happens, a link will be provided here.
 
 ## Use
-For now, no main script is provide, but it will been in some time
+There is two different ways to train models:  
+1. Run the script within these parameters -> It will train only one model
+   - `--optim_name`: Choose between RMSProp, Adam & SGD
+   - `--learning_rate`: The learning rate
+   - `--rms_alpha`: Alpha value for RMS optim
+   - `--rms_eps`: EPS value for RMS optim 
+   - `--momentum`: Momentum for SGD RMS optim 
+   - `--adam_beta_1`: Beta1 for Adam optim
+   - `--adam_beta_2`: Beta2 for Adam optim
+   - `--model_name`: The model to use (see list)
+   - `--num_epoch`: Number of epoch for training
+   - `--batch_size`: THe batch size
+   - `--experiement_id`: The experiement ID serve for saving
 
+      ```bash
+      python train.py <parameter>
+      ```
+
+2. Complete a json file with all the parameters of differents model (Template is existing in the current folder)
+   ```bash
+   python3 train_with_config.py --config-filename <your_file_name>
+   ```
