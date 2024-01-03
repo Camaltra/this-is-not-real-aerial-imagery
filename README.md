@@ -43,6 +43,10 @@ To use this codebase, follow these steps:
 git clone https://github.com/Camaltra/this-is-not-real-aerial-imagery.git
 cd this-is-not-real-aerial-imagery
 ```
+Then run:
+```bash
+export PYTHONPATH=$(pwd)/src:$PYTHONPATH
+```
 
 Please refer to the README in the src/ folder for additional installation steps and environment setup required for different modules.
 
